@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: cpuspin5
+spec:
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      name: cpuspin5
+      labels:
+        schedulerName: poseidon
+    spec:
+      schedulerName: poseidon
+      containers:
+      - name: cpuspin
+        image: firmament/libhdfs3
+        resources:
+          requests:
+            memory: "10Mi"
+            cpu: "10m"
+          limits:
+            memory: "12Mi"
+            cpu: "20m"
+        command: ["/bin/sh", "-c", "/cpu_spin 60"]
+      restartPolicy: Never

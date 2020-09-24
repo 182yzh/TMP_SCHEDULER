@@ -1,0 +1,173 @@
+// The Firmament project
+// Copyright (c) The Firmament Authors.
+
+syntax = "proto3";
+
+package firmament;
+
+import "job_desc.proto";
+import "resource_stats.proto";
+import "resource_topology_node_desc.proto";
+import "task_desc.proto";
+import "task_stats.proto";
+import "scheduling_delta.proto";
+
+service FirmamentScheduler {
+  // Schedule sends a schedule request to firmament server.
+  rpc Schedule (ScheduleRequest) returns (SchedulingDeltas) {}
+
+  // TaskCompleted notifies firmament server the given task is completed.
+  rpc TaskCompleted (TaskUID) returns (TaskCompletedResponse) {}
+  // TaskFailed notifies firmament server the given task is failed.
+  rpc TaskFailed (TaskUID) returns (TaskFailedResponse) {}
+  // TaskRemoved notifies firmament server the given task is removed.
+  rpc TaskRemoved (TaskUID) returns (TaskRemovedResponse) {}
+  // TaskSubmitted notifies firmament server the given task is submitted.
+  rpc TaskSubmitted (TaskDescription) returns (TaskSubmittedResponse) {}
+  // TaskUpdated notifies firmament server the given task is updated.
+  rpc TaskUpdated (TaskDescription) returns (TaskUpdatedResponse) {}
+
+  // NodeAdded notifies firmament server the given node is added.
+  rpc NodeAdded (ResourceTopologyNodeDescriptor) returns (NodeAddedResponse) {}
+  // NodeFailed notifies firmament server the given node is failed.
+  rpc NodeFailed (ResourceUID) returns (NodeFailedResponse) {}
+  // NodeRemoved notifies firmament server the given node is removed.
+  rpc NodeRemoved (ResourceUID) returns (NodeRemovedResponse) {}
+  // NodeUpdated notifies firmament server the given node is updated.
+  rpc NodeUpdated (ResourceTopologyNodeDescriptor) returns (NodeUpdatedResponse) {}
+
+  // AddTaskStats sends task status to firmament server.
+  rpc AddTaskStats (TaskStats) returns (TaskStatsResponse) {}
+  // AddNodeStats sends node status to firmament server.
+  rpc AddNodeStats (ResourceStats) returns (ResourceStatsResponse) {}
+
+  rpc Check(HealthCheckRequest) returns (HealthCheckResponse);
+
+  // AddTaskInfo sends task status to firmament server.
+  rpc AddTaskInfo (TaskInfo) returns (TaskInfoResponse);
+}
+
+message ScheduleRequest {}
+
+message SchedulingDeltas {
+  repeated SchedulingDelta deltas = 1;
+  repeated uint64 unscheduled_tasks = 2;
+}
+
+message TaskCompletedResponse {
+  TaskReplyType type = 1;
+}
+
+message TaskDescription {
+  TaskDescriptor task_descriptor = 1;
+  JobDescriptor job_descriptor = 2;
+}
+
+message TaskSubmittedResponse {
+  TaskReplyType type = 1;
+}
+
+message TaskRemovedResponse {
+  TaskReplyType type = 1;
+}
+
+message TaskFailedResponse {
+  TaskReplyType type = 1;
+}
+
+message TaskUpdatedResponse {
+  TaskReplyType type = 1;
+}
+
+message NodeAddedResponse {
+  NodeReplyType type = 1;
+}
+
+message NodeRemovedResponse {
+  NodeReplyType type = 1;
+}
+
+message NodeFailedResponse {
+  NodeReplyType type = 1;
+}
+
+message NodeUpdatedResponse {
+  NodeReplyType type = 1;
+}
+
+message TaskStatsResponse {
+  TaskReplyType type = 1;
+}
+
+message ResourceStatsResponse {
+  NodeReplyType type = 1;
+}
+
+message TaskUID {
+  uint64 task_uid = 1;
+}
+
+message ResourceUID {
+  string resource_uid = 1;
+}
+
+enum TaskReplyType {
+  TASK_COMPLETED_OK = 0;
+  TASK_SUBMITTED_OK = 1;
+  TASK_REMOVED_OK = 2;
+  TASK_FAILED_OK = 3;
+  TASK_UPDATED_OK = 4;
+  TASK_NOT_FOUND = 5;
+  TASK_JOB_NOT_FOUND = 6;
+  TASK_ALREADY_SUBMITTED = 7;
+  TASK_STATE_NOT_CREATED = 8;
+}
+
+enum NodeReplyType {
+  NODE_ADDED_OK = 0;
+  NODE_FAILED_OK = 1;
+  NODE_REMOVED_OK = 2;
+  NODE_UPDATED_OK = 3;
+  NODE_NOT_FOUND = 4;
+  NODE_ALREADY_EXISTS = 5;
+}
+
+enum ServingStatus {
+  UNKNOWN = 0;
+  SERVING = 1;
+  NOT_SERVING = 2;
+}
+
+message HealthCheckRequest {
+  string grpc_service = 1;
+}
+
+message HealthCheckResponse {
+  ServingStatus status = 1;
+}
+
+// TaskInfo is the stats(including CPU, Memory and ephemeral) of a task.
+message TaskInfo {
+  string task_name = 1; // podname/namespace
+  string resource_id = 2;  // node name
+  int64 cpu_utilization = 3;
+  int64 mem_utilization = 4;
+  int64 ephemeral_storage_utilization = 5;
+  TaskInfoType type=6;
+}
+
+message TaskInfoResponse {
+  TaskInfoReplyType type = 1;
+}
+
+enum TaskInfoReplyType {
+  TASKINFO_SUBMITTED_OK = 0;
+  TASKINFO_REMOVED_OK = 2;
+  TASKINFO_SUBMIT_FAILED = 3;
+  TASKINFO_REMOVE_FAILED=4;
+}
+
+enum TaskInfoType{
+  TASKINFO_ADD =0;
+  TASKINFO_REMOVE=1;
+}

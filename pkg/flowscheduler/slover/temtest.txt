@@ -1,0 +1,50 @@
+c This is a max-flow min-cost problem
+p min 16 13
+c Nodes
+c Resource Node,res aviliable is 8
+n 4 0
+c this is an unscheduled node for job
+n 13 0
+c this is an unscheduled node for job
+n 5 0
+c TaskNode, ResRequest is 1,state : 1
+n 8 0
+c this is an unscheduled node for job
+n 11 0
+c Resource Node,res aviliable is 8
+n 2 0
+c Resource Node,res aviliable is 8
+n 3 0
+c TaskNode, ResRequest is 1,state : 1
+n 6 0
+c this is an unscheduled node for job
+n 9 0
+c TaskNode, ResRequest is 1,state : 1
+n 10 0
+c TaskNode, ResRequest is 8,state : 1
+n 16 1
+c Sink Node
+n 1 -1
+c this is an unscheduled node for job
+n 7 0
+c TaskNode, ResRequest is 1,state : 1
+n 12 0
+c TaskNode, ResRequest is 1,state : 1
+n 14 0
+c this is an unscheduled node for job
+n 15 0
+c arcs
+a 5 1 0 3 0
+a 4 1 0 1 0
+a 9 1 0 3 0
+a 11 1 0 3 0
+a 16 15 0 1 4
+a 2 1 0 1 0
+a 3 1 0 1 0
+a 16 3 0 1 17
+a 16 2 0 1 33
+a 7 1 0 3 0
+a 13 1 0 3 0
+a 15 1 0 3 0
+a 16 4 0 1 29
+

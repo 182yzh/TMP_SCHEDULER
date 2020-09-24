@@ -1,0 +1,239 @@
+/*
+Copyright 2018 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package firmament
+
+import (
+	"fmt"
+
+	"github.com/golang/glog"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/grpclog"
+)
+
+// Schedule sends a schedule request to firmament server.
+func Schedule(client FirmamentSchedulerClient) *SchedulingDeltas {
+	scheduleResp, err := client.Schedule()
+	if err != nil {
+		grpclog.Fatalf("%v.Schedule(_) = _, %v: ", client, err)
+	}
+	return scheduleResp
+}
+
+// TaskCompleted tells firmament server the given task is completed.
+func TaskCompleted(client FirmamentSchedulerClient, tuid *TaskUID) {
+	err := client.TaskCompleted(tuid)
+	if err != nil {
+		grpclog.Fatalf("%v.TaskCompleted(_) = _, %v: ", client, err)
+	}
+	tCompletedResp := new(TaskCompletedResponse)
+	switch tCompletedResp.Type {
+	case TaskReplyType_TASK_NOT_FOUND:
+		glog.Fatalf("Task %d not found", tuid.TaskUid)
+	case TaskReplyType_TASK_JOB_NOT_FOUND:
+		glog.Fatalf("Task's %d job not found", tuid.TaskUid)
+	case TaskReplyType_TASK_COMPLETED_OK:
+	default:
+		//panic(fmt.Sprintf("Unexpected TaskCompleted response %v for task %v", tCompletedResp, tuid.TaskUid))
+	}
+}
+
+// TaskFailed tells firmament server the given task is failed.
+func TaskFailed(client FirmamentSchedulerClient, tuid *TaskUID) {
+	 err := client.TaskFailed(tuid)
+	if err != nil {
+		grpclog.Fatalf("%v.TaskFailed(_) = _, %v: ", client, err)
+	}
+	tFailedResp := new(TaskFailedResponse)
+	switch tFailedResp.Type {
+	case TaskReplyType_TASK_NOT_FOUND:
+		glog.Fatalf("Task %d not found", tuid.TaskUid)
+	case TaskReplyType_TASK_JOB_NOT_FOUND:
+		glog.Fatalf("Task's %d job not found", tuid.TaskUid)
+	case TaskReplyType_TASK_FAILED_OK:
+	default:
+		//panic(fmt.Sprintf("Unexpected TaskFailed response %v for task %v", tFailedResp, tuid.TaskUid))
+	}
+}
+
+// TaskRemoved tells firmament server the given task is removed.
+func TaskRemoved(client FirmamentSchedulerClient, tuid *TaskUID) {
+	err := client.TaskRemoved( tuid)
+	if err != nil {
+		grpclog.Fatalf("%v.TaskRemoved(_) = _, %v: ", client, err)
+	}
+	tRemovedResp := new(TaskRemovedResponse)
+	switch tRemovedResp.Type {
+	case TaskReplyType_TASK_NOT_FOUND:
+		glog.Fatalf("Task %d not found", tuid.TaskUid)
+	case TaskReplyType_TASK_JOB_NOT_FOUND:
+		glog.Fatalf("Task's %d job not found", tuid.TaskUid)
+	case TaskReplyType_TASK_REMOVED_OK:
+	default:
+		//panic(fmt.Sprintf("Unexpected TaskRemoved response %v for task %v", tRemovedResp, tuid.TaskUid))
+	}
+}
+
+// TaskSubmitted tells firmament server the given task is submitted.
+func TaskSubmitted(client FirmamentSchedulerClient, td *TaskDescription) {
+	tSubmittedResp := new(TaskSubmittedResponse)
+	err := client.TaskSubmitted( td)
+	
+	if err != nil {
+		grpclog.Fatalf("%v.TaskSubmitted(_) = _, %v: ", client, err)
+	}
+	switch tSubmittedResp.Type {
+	case TaskReplyType_TASK_ALREADY_SUBMITTED:
+		glog.Fatalf("Task (%s,%d) already submitted", td.JobDescriptor.Uuid, td.TaskDescriptor.Uid)
+	case TaskReplyType_TASK_STATE_NOT_CREATED:
+		glog.Fatalf("Task (%s,%d) not in created state", td.JobDescriptor.Uuid, td.TaskDescriptor.Uid)
+	case TaskReplyType_TASK_SUBMITTED_OK:
+	default:
+		//panic(fmt.Sprintf("Unexpected TaskSubmitted response %v for task (%v,%v)", tSubmittedResp, td.JobDescriptor.Uuid, td.TaskDescriptor.Uid))
+	}
+}
+
+// TaskUpdated tells firmament server the given task is updated.
+func TaskUpdated(client FirmamentSchedulerClient, td *TaskDescription) {
+	tUpdatedResp := new(TaskUpdatedResponse)
+	err := client.TaskUpdated( td)
+	if err != nil {
+		grpclog.Fatalf("%v.TaskUpdated(_) = _, %v: ", client, err)
+	}
+	switch tUpdatedResp.Type {
+	case TaskReplyType_TASK_NOT_FOUND:
+		glog.Fatalf("Task (%s,%d) not found", td.JobDescriptor.Uuid, td.TaskDescriptor.Uid)
+	case TaskReplyType_TASK_JOB_NOT_FOUND:
+		glog.Fatalf("Task's (%s,%d) job not found", td.JobDescriptor.Uuid, td.TaskDescriptor.Uid)
+	case TaskReplyType_TASK_UPDATED_OK:
+	default:
+		fmt.Sprintf("ttttt")
+		//panic(fmt.Sprintf("Unexpected TaskUpdated response %v for task (%v,%v)", tUpdatedResp, td.JobDescriptor.Uuid, td.TaskDescriptor.Uid))
+	}
+}
+
+// NodeAdded tells firmament server the given node is added.
+func NodeAdded(client FirmamentSchedulerClient, rtnd *ResourceTopologyNodeDescriptor) {
+	nAddedResp := new(NodeAddedResponse)
+	err := client.NodeAdded( rtnd)
+	if err != nil {
+		grpclog.Fatalf("%v.NodeAdded(_) = _, %v: ", client, err)
+	}
+	switch nAddedResp.Type {
+	case NodeReplyType_NODE_ALREADY_EXISTS:
+		glog.Infof("Tried to add existing node %s", rtnd.ResourceDesc.Uuid)
+	case NodeReplyType_NODE_ADDED_OK:
+	default:
+		//panic(fmt.Sprintf("Unexpected NodeAdded response %v for node %v", nAddedResp, rtnd.ResourceDesc.Uuid))
+	}
+}
+
+// NodeFailed tells firmament server the given node is failed.
+func NodeFailed(client FirmamentSchedulerClient, ruid *ResourceUID) {
+	nFailedResp := new(NodeFailedResponse)
+	err := client.NodeFailed( ruid)
+	if err != nil {
+		grpclog.Fatalf("%v.NodeFailed(_) = _, %v: ", client, err)
+	}
+	switch nFailedResp.Type {
+	case NodeReplyType_NODE_NOT_FOUND:
+		glog.Fatalf("Tried to fail non-existing node %s", ruid.ResourceUid)
+	case NodeReplyType_NODE_FAILED_OK:
+	default:
+		//panic(fmt.Sprintf("Unexpected NodeFailed response %v for node %v", nFailedResp, ruid.ResourceUid))
+	}
+}
+
+// NodeRemoved tells firmament server the given node is removed.
+func NodeRemoved(client FirmamentSchedulerClient, ruid *ResourceUID) {
+	nRemovedResp := new(NodeRemovedResponse)
+	err := client.NodeRemoved(ruid)
+	if err != nil {
+		grpclog.Fatalf("%v.NodeRemoved(_) = _, %v: ", client, err)
+	}
+	switch nRemovedResp.Type {
+	case NodeReplyType_NODE_NOT_FOUND:
+		glog.Fatalf("Tried to remove non-existing node %s", ruid.ResourceUid)
+	case NodeReplyType_NODE_REMOVED_OK:
+	default:
+		//panic(fmt.Sprintf("Unexpected NodeRemoved response %v for node %v", nRemovedResp, ruid.ResourceUid))
+	}
+}
+
+// NodeUpdated tells firmament server the given node is updated.
+func NodeUpdated(client FirmamentSchedulerClient, rtnd *ResourceTopologyNodeDescriptor) {
+	nUpdatedResp := new(NodeUpdatedResponse) 
+	err := client.NodeUpdated(rtnd)
+	if err != nil {
+		grpclog.Fatalf("%v.NodeUpdated(_) = _, %v: ", client, err)
+	}
+	switch nUpdatedResp.Type {
+	case NodeReplyType_NODE_NOT_FOUND:
+		glog.Fatalf("Tried to updated non-existing node %s", rtnd.ResourceDesc.Uuid)
+	case NodeReplyType_NODE_UPDATED_OK:
+	default:
+		//panic(fmt.Sprintf("Unexpected NodeUpdated response %v for node %v", nUpdatedResp, rtnd.ResourceDesc.Uuid))
+	}
+}
+
+// AddTaskStats sends task status to firmament server.
+func AddTaskStats(client FirmamentSchedulerClient, ts *TaskStats) {
+	err := client.AddTaskStats(ts)
+	if err != nil {
+		grpclog.Fatalf("%v.AddTaskStats(_) = _, %v: ", client, err)
+	}
+}
+
+// AddNodeStats sends node status to firmament server.
+func AddNodeStats(client FirmamentSchedulerClient, rs *ResourceStats) {
+	err := client.AddNodeStats(rs)
+	if err != nil {
+		grpclog.Fatalf("%v.AddNodeStats(_) = _, %v: ", client, err)
+	}
+}
+
+// Check tests if firmament server is health
+func Check(client FirmamentSchedulerClient, req_service *HealthCheckRequest) (bool, error) {
+	err := client.Check(context.Background(), req_service)
+	if err == nil {
+		
+		return true, nil
+	}
+	return false, err
+}
+
+// New creates a firmament scheduler client by a remote server address.
+// NOTE: it's an insecure connection.
+func New(address string) (FirmamentSchedulerClient, *grpc.ClientConn, error) {
+	var opts []grpc.DialOption
+	opts = append(opts, grpc.WithInsecure())
+	conn, err := grpc.Dial(address, opts...)
+	if err != nil {
+		glog.Errorf("Did not connect to Firmament scheduler: %v", err)
+		return nil, nil, err
+	}
+	fc := NewFirmamentSchedulerClient()
+	return fc, conn, nil
+}
+
+// AddTaskStats sends task status to firmament server.
+func AddTaskInfo(client FirmamentSchedulerClient, ts *TaskInfo) {
+	err := client.AddTaskInfo( ts)
+	if err != nil {
+		grpclog.Fatalf("%v.AddTaskInfo(_) = _, %v: ", client, err)
+	}
+}

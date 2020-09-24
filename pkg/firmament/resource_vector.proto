@@ -1,0 +1,40 @@
+/*
+Copyright 2018 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+//
+// Resource vector protobuf.
+
+syntax = "proto3";
+
+package firmament;
+
+// ResourceVector stores all the resources which will be take in account during scheduling.
+message ResourceVector {
+  // cpu_cores is the cpu millicores of node..
+  float cpu_cores = 1;
+  uint64 ram_bw = 2;
+  // ram_cap is the memory capacity of node.
+  uint64 ram_cap = 3; // in MB
+  uint64 disk_bw = 4;
+  // disk_cap is the disk capacity of node.
+  uint64 disk_cap = 5;
+  // net_tx_bw is transmit network packets in KB.
+  uint64 net_tx_bw = 6;
+  // net_tx_bw is receive network packets in KB.
+  uint64 net_rx_bw = 7;
+  // ephemeral storage
+  uint64 ephemeral_cap = 8;
+}

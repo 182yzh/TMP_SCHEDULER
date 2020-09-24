@@ -1,0 +1,4 @@
+Log file created at: 2020/09/23 14:03:49
+Running on machine: node1
+Binary: Built with gc go1.12 for linux/amd64
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg

@@ -1,0 +1,99 @@
+/*
+Copyright 2018 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+syntax = "proto3";
+
+package stats;
+
+// PoseidonStats is a service that is responsible for receiving node and pod stats.
+service PoseidonStats {
+  rpc ReceiveNodeStats(stream NodeStats) returns (stream NodeStatsResponse) {}
+  rpc ReceivePodStats(stream PodStats) returns (stream PodStatsResponse) {}
+}
+
+// NodeStats describes stats of node.
+message NodeStats {
+  string hostname = 1;
+  uint64 timestamp = 2;
+  // CPU stats (in millicores).
+  int64 cpu_allocatable = 3;
+  int64 cpu_capacity = 4;
+  // CPU stats (fraction of total).
+  double cpu_reservation = 5;
+  double cpu_utilization = 6;
+  // Memory stats (in KB).
+  int64 mem_allocatable = 7;
+  int64 mem_capacity = 8;
+  // Memory stats (fraction of total).
+  double mem_reservation = 9;
+  double mem_utilization = 10;
+}
+
+// NodeStatsResponseType indicates all supported node stats response type.
+enum NodeStatsResponseType {
+  NODE_STATS_OK = 0;
+  NODE_NOT_FOUND = 1;
+}
+
+// NodeStatsResponse describes stats of node which is parsed from NodeStats and eventually will be consumed by firmament.
+message NodeStatsResponse {
+  NodeStatsResponseType type = 1;
+  string hostname = 2;
+}
+
+// PodStats describes stats of pod.
+message PodStats {
+  string name = 1;
+  string namespace = 2;
+  string hostname = 3;
+  // CPU stats in millicores.
+  int64 cpu_limit = 4;
+  int64 cpu_request = 5;
+  int64 cpu_usage = 6;
+  // Memory stats in Kb.
+  int64 mem_limit = 7;
+  int64 mem_request = 8;
+  int64 mem_usage = 9;
+  int64 mem_rss = 10;
+  int64 mem_cache = 11;
+  int64 mem_working_set = 12;
+  int64 mem_page_faults = 13;
+  double mem_page_faults_rate = 14;
+  int64 major_page_faults = 15;
+  double major_page_faults_rate = 16;
+  // Network stats in Kb.
+  int64 net_rx = 17;
+  int64 net_rx_errors = 18;
+  double net_rx_errors_rate = 19;
+  double net_rx_rate = 20;
+  int64 net_tx = 21;
+  int64 net_tx_errors = 22;
+  double net_tx_errors_rate = 23;
+  double net_tx_rate = 24;
+}
+
+// // PodStatsResponseType indicates all supported pod stats response type.
+enum PodStatsResponseType {
+  POD_STATS_OK = 0;
+  POD_NOT_FOUND = 1;
+}
+
+// PodStatsResponse describes stats of pod which is parsed from PodStats and eventually will be consumed by firmament.
+message PodStatsResponse {
+  PodStatsResponseType type = 1;
+  string name = 2;
+  string namespace = 3;
+}

@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: replace-value
+spec:
+  completions: replace-value
+  parallelism: replace-value
+  template:
+    metadata:
+      name: replace-value
+      labels:
+        schedulerName: poseidongpu
+    spec:
+      schedulerName: poseidongpu
+      containers:
+      - name: replace-value 
+        image: firmament/libhdfs3
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            memory: "10Mi"
+            cpu: "0m"
+            nvidia.com/gpu: replace-value
+          limits:
+            memory: "12Mi"
+            cpu: "0m"
+            nvidia.com/gpu: replace-value 
+        command: ["/bin/sh", "-c", "/cpu_spin replace-value"]
+      restartPolicy: Never
